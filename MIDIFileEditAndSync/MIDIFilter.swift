@@ -12,7 +12,7 @@ class MIDIFilter: FilterTableDelegate {
     }
 
     // get the pitch class and modify note by offset value
-    var filterFunction: (AKMIDINoteData) -> AKMIDINoteData {
+    var filterFunction: (MIDINoteData) ->MIDINoteData {
         return { note in
             var newNote = note
             let pitchClass = Int(note.noteNumber % 12)

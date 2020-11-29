@@ -5,7 +5,7 @@ import AudioKit
 
 class MIDINoteDataVC: UIViewController {
     @IBOutlet weak var noteDataTableView: UITableView!
-    var noteData: [AKMIDINoteData]!
+    var noteData: [MIDINoteData]!
 
     override func viewDidLoad() {
         super.viewDidLoad()
