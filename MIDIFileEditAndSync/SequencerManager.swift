@@ -4,13 +4,13 @@ import AudioKit
 import Foundation
 
 class SequencerManager {
-    let engine = AKEngine()
-    var seq: AKAppleSequencer?
-    let oscBank = AKSynth(attackDuration: 0.01, decayDuration: 0.03)
-    let mixer = AKMixer()
-    var node: AKMIDINode!
+    let engine = AudioEngine()
+    var seq: AppleSequencer?
+    let oscBank = Synth(attackDuration: 0.01, decayDuration: 0.03)
+    let mixer = Mixer()
+    var node: MIDINode!
 
-    let minLoopLength = AKDuration(beats: 4)
+    let minLoopLength = Duration(beats: 4)
 
     init() {
         setUpSequencer()
@@ -18,10 +18,10 @@ class SequencerManager {
     }
 
     fileprivate func setUpSequencer() {
-        seq = AKAppleSequencer(filename: "D_mixolydian_01")
+        seq = AppleSequencer(filename: "D_mixolydian_01")
         seq?.setLength(minLoopLength)
         seq?.enableLooping()
-        node = AKMIDINode(node: oscBank)
+        node = MIDINode(node: oscBank)
         seq?.setGlobalMIDIOutput(node.midiIn)
         mixer.addInput(oscBank)
         engine.output = mixer
@@ -31,7 +31,7 @@ class SequencerManager {
         do {
             try engine.start()
         } catch {
-            AKLog("Couldn't start AudioKit")
+            Log("Couldn't start AudioKit")
         }
     }
 
@@ -54,7 +54,7 @@ class SequencerManager {
             try data.write(to: tempPath as URL)
             return tempPath
         } catch {
-            AKLog("couldn't write to URL")
+            Log("couldn't write to URL")
         }
         return nil
     }
@@ -73,9 +73,9 @@ class SequencerManager {
     }
 
     // MARK: - MIDI editing
-    // general helper to alter AKMIDINoteData arrays for selected tracks
+    // general helper to alter MIDINoteData arrays for selected tracks
     fileprivate func modifyNotesInSelectedTracks(_ selectedTracks: Set<Int>,
-                                                 modification: (AKMIDINoteData) -> AKMIDINoteData) {
+                                                 modification: (MIDINoteData) -> MIDINoteData) {
         guard let seq = seq else { return }
         for (i, track) in seq.tracks.enumerated() {
             if selectedTracks.contains(i) {
@@ -89,15 +89,15 @@ class SequencerManager {
     }
 
     func filterNotes(_ selectedTracks: Set<Int>,
-                     filterFunction: (AKMIDINoteData) -> AKMIDINoteData) {
+                     filterFunction: (MIDINoteData) -> MIDINoteData) {
         modifyNotesInSelectedTracks(selectedTracks, modification: filterFunction)
     }
 
     func doubleTrackLengths(_ selectedTracks: Set<Int>) {
         modifyNotesInSelectedTracks(selectedTracks) { note in
             var newNote = note
-            newNote.position = AKDuration(beats: note.position.beats * 2)
-            newNote.duration = AKDuration(beats: note.duration.beats * 2)
+            newNote.position = Duration(beats: note.position.beats * 2)
+            newNote.duration = Duration(beats: note.duration.beats * 2)
             return newNote
         }
     }
@@ -105,13 +105,13 @@ class SequencerManager {
     func halveTrackLengths(_ selectedTracks: Set<Int>) {
         modifyNotesInSelectedTracks(selectedTracks) { note in
             var newNote = note
-            newNote.position = AKDuration(beats: note.position.beats / 2)
+            newNote.position = Duration(beats: note.position.beats / 2)
             let newDuration = note.duration.beats / 2
             // very weird things happen when durations get shorter than the default PPQN of 24
             if newDuration >= 1 / 24 {
-                newNote.duration = AKDuration(beats: newDuration)
+                newNote.duration = Duration(beats: newDuration)
             } else {
-                AKLog("Note is already too short")
+                Log("Note is already too short")
             }
             return newNote
         }
@@ -120,7 +120,7 @@ class SequencerManager {
     func shiftRight(_ selectedTracks: Set<Int>) {
         modifyNotesInSelectedTracks(selectedTracks) { note in
             var newNote = note
-            newNote.position = AKDuration(beats: note.position.beats + 1)
+            newNote.position = Duration(beats: note.position.beats + 1)
             return newNote
         }
     }
@@ -128,7 +128,7 @@ class SequencerManager {
     func shiftLeft(_ selectedTracks: Set<Int>) {
         modifyNotesInSelectedTracks(selectedTracks) { note in
             var newNote = note
-            newNote.position = AKDuration(beats: note.position.beats - 1)
+            newNote.position = Duration(beats: note.position.beats - 1)
             return newNote
         }
     }
